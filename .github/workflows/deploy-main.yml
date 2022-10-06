@@ -1,0 +1,19 @@
+name: DEPLOY MAIN
+
+on:
+  push:
+    branches: [main]
+
+  workflow_dispatch:
+
+jobs:
+  push-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout to code with full git history.
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Linting the main code
+        uses: github/super-linter@v4

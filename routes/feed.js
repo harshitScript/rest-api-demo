@@ -1,9 +1,9 @@
-const express = require("express");
-const { getPostsController } = require("../controllers/feed.controllers");
+const express = require('express')
+const { getPostsController } = require('../controllers/feed.controllers')
 
-const feedRoutes = express.Router();
+const feedRoutes = express.Router()
 
-//? GET /feed/posts
-feedRoutes.get("/posts", getPostsController);
+//*  GET /feed/posts
+feedRoutes.get('/posts', getPostsController)
 
-module.exports = feedRoutes;
+module.exports = feedRoutes

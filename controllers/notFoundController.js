@@ -1,9 +1,9 @@
 const notFoundController = (req, res) => {
-  const { path } = req;
+  const { path } = req
 
   return res.status(404).json({
-    message: `The requested path ${path} is not found on our server.`,
-  });
-};
+    message: `The requested path ${path} is not found on our server.`
+  })
+}
 
-module.exports = notFoundController;
+module.exports = notFoundController

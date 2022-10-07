@@ -1,20 +1,19 @@
 const getPostsController = (req, res, next) => {
-  return res.json({ message: "posts will be served." });
-};
+  return res.json({ message: 'posts will be served.' })
+}
 
 const postAddPostsController = (req, res, next) => {
-  const { title, description } = req.body;
+  const { title, description } = req.body
 
-
-  //? Some db operations
+  // ? Some db operations
 
   return res.status(201).json({
-    message: "post created successfully",
+    message: 'post created successfully',
     content: {
       title,
-      description,
-    },
-  });
-};
+      description
+    }
+  })
+}
 
-module.exports = { getPostsController, postAddPostsController };
+module.exports = { getPostsController, postAddPostsController }

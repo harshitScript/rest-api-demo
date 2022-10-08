@@ -4,12 +4,17 @@ const feedRoutes = require('./routes/feed')
 const notFoundController = require('./controllers/notFoundController')
 const errorHandlingMiddleware = require('./middleware/errorHandlingMiddleware')
 const cors = require('./middleware/cors')
+const path = require('path')
+const rootDir = require('./utils/rootDir')
 
 const app = express()
 config()
 
 //* CORS
 app.use(cors)
+
+//* STATIC-ENDPOINTS GET /images/file_name.format
+app.use('/images', express.static(path.join(rootDir, 'images')))
 
 //* ENDPOINTS  <METHOD | PATH>
 app.use('/feed', feedRoutes)

@@ -1,5 +1,5 @@
 const getPostsController = (req, res, next) => {
-  return res.json({ message: 'posts will be served.' })
+  return res.json({ message: 'posts will be served soon.' })
 }
 
 const postAddPostsController = (req, res, next) => {

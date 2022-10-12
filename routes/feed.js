@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getPostsController,
   postAddPostsController,
+  getPostController,
 } = require("../controllers/feed.controllers");
 const { json } = require("body-parser");
 const {
@@ -22,5 +23,8 @@ feedRoutes.post(
   validatorMiddleware,
   postAddPostsController
 );
+
+//* GET /feed/post/:_id
+feedRoutes.get("/post/:_id", getPostController);
 
 module.exports = feedRoutes;

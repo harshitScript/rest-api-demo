@@ -1,25 +1,67 @@
+const Post = require("../models/posts");
+
 const getPostsController = (req, res, next) => {
-  return res.json([
-    {
-      title: 'I m super hero',
-      description: 'One day i will be super hero of my own world.',
-      image: 'http://localhost:4000/images/test.jpg'
-    }
-  ])
-}
+  const failureCallback = (error) => {
+    next(error);
+  };
+
+  const successCallback = (posts) => {
+    return res.json(posts);
+  };
+
+  Post.find().then(successCallback).catch(failureCallback);
+};
 
 const postAddPostsController = (req, res, next) => {
-  const { title, description } = req.body
+  const { title, description, image } = req.body;
+
+  const successCallback = () => {
+    return res.status(201).json({
+      message: "post created successfully",
+      content: {
+        title,
+        description,
+        image,
+      },
+    });
+  };
+
+  const failureCallback = (error) => {
+    next(error);
+  };
 
   // ? Some db operations
+  const post = new Post({
+    title,
+    description,
+    image: "http://localhost:4000/images/test.jpg",
+    userId: {
+      username: "hScript",
+      userImage: "http://localhost:4000/images/user/test.jpg",
+    },
+  });
+  post.save().then(successCallback).catch(failureCallback);
+};
 
-  return res.status(201).json({
-    message: 'post created successfully',
-    content: {
-      title,
-      description
+const getPostController = (req, res, next) => {
+  const { _id } = req.params;
+
+  const failureCallback = (error) => {
+    next(error);
+  };
+
+  const successCallback = (post) => {
+    if (post) {
+      return res.json(post);
     }
-  })
-}
+    next(new Error("Post not Found."));
+  };
 
-module.exports = { getPostsController, postAddPostsController }
+  Post.findById(_id).then(successCallback).catch(failureCallback);
+};
+
+module.exports = {
+  getPostsController,
+  postAddPostsController,
+  getPostController,
+};

@@ -5,7 +5,9 @@
   "main": "app.js ",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon ./app.js"
+    "start": "nodemon ./app.js",
+    "start:UAT": "env-cmd -f ./.env.UAT npm start",
+    "start:PROD": "env-cmd -f ./.env.PROD npm start"
   },
   "keywords": [
     "REST",
@@ -23,6 +25,7 @@
   "dependencies": {
     "body-parser": "^1.20.1",
     "dotenv": "^16.0.3",
+    "env-cmd": "^10.1.0",
     "express": "^4.18.1",
     "express-validator": "^6.14.2",
     "mongodb": "^4.10.0",

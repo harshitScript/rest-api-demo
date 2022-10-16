@@ -4,6 +4,8 @@ const path = require("path");
 const rootDir = require("../utils/rootDir");
 
 const getPostsController = (req, res, next) => {
+  const { page } = req.params;
+
   const failureCallback = (error) => {
     next(error);
   };
@@ -12,7 +14,23 @@ const getPostsController = (req, res, next) => {
     return res.json(posts);
   };
 
-  Post.find().then(successCallback).catch(failureCallback);
+  Post.find()
+    .skip((page - 1) * 5)
+    .limit(5)
+    .then(successCallback)
+    .catch(failureCallback);
+};
+
+const getPostsPagesCountController = (req, res, next) => {
+  const failureCallback = (error) => {
+    next(error);
+  };
+
+  const successCallback = (numberOfDocuments) => {
+    return res.json({ count: Math.ceil(numberOfDocuments / 5) });
+  };
+
+  Post.find().countDocuments().then(successCallback).catch(failureCallback);
 };
 
 const postAddPostsController = (req, res, next) => {
@@ -114,9 +132,38 @@ const postEditPostController = (req, res, next) => {
     .catch(failureCallback);
 };
 
+const deletePostController = (req, res, next) => {
+  const { _id } = req.params;
+
+  const failureCallback = (error) => {
+    next(error);
+  };
+
+  const successCallback = () => {
+    return res.json({ message: `Post id:${_id} deleted successfully.` });
+  };
+
+  const deletePost = (post) => {
+    if (post) {
+      deleteFile({ absUrl: path.join(rootDir, "images", post.imageName) });
+
+      return post.delete();
+    } else {
+      throw new Error("Post Not Found.");
+    }
+  };
+
+  Post.findById(_id)
+    .then(deletePost)
+    .then(successCallback)
+    .catch(failureCallback);
+};
+
 module.exports = {
   getPostsController,
   postAddPostsController,
   getPostController,
   postEditPostController,
+  deletePostController,
+  getPostsPagesCountController,
 };

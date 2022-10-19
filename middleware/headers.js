@@ -1,7 +1,7 @@
 const headers = (req, res, next) => {
-  res.setHeader("phase", process.env.APP_PHASE);
+  res.setHeader('phase', process.env.APP_PHASE)
 
-  next();
-};
+  next()
+}
 
-module.exports = headers;
+module.exports = headers

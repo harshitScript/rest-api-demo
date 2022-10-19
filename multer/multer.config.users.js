@@ -1,11 +1,12 @@
 const multer = require('multer')
 
 const diskStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    return cb(null, 'images')
-  },
   filename: (req, file, cb) => {
     return cb(null, `${file.originalname}`)
+  },
+  destination: (req, file, cb) => {
+    //* Destination must be provided by thinking we are in the root directory
+    return cb(null, 'images/user')
   }
 })
 
@@ -20,6 +21,6 @@ const fileFilter = (req, file, cb) => {
   return cb(null, false)
 }
 
-const postsMulter = multer({ storage: diskStorage, fileFilter })
+const userMulter = multer({ storage: diskStorage, fileFilter })
 
-module.exports = postsMulter
+module.exports = userMulter

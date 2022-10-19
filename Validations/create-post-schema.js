@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator')
+const { body } = require('express-validator')
 
 const create_post_schema = [
   body('title')
@@ -11,14 +11,4 @@ const create_post_schema = [
     .withMessage('Description must have 10 characters')
 ]
 
-const validatorMiddleware = (req, res, next) => {
-  const validationErrors = validationResult(req)
-
-  if (validationErrors.isEmpty()) {
-    return next()
-  }
-
-  return res.status(412).json({ errors: validationErrors.errors })
-}
-
-module.exports = { schema: create_post_schema, validatorMiddleware }
+module.exports = create_post_schema

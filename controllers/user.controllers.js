@@ -1,23 +1,23 @@
-const User = require("../models/users");
-const { generateHashedPassword } = require("../utils/helper");
-const jwt = require("jsonwebtoken");
+const User = require('../models/users')
+const { generateHashedPassword } = require('../utils/helper')
+const jwt = require('jsonwebtoken')
 
 const addUserController = (req, res, next) => {
-  const { name, username, email, password } = req.body;
+  const { name, username, email, password } = req.body
 
-  const { file } = req;
+  const { file } = req
 
-  const hashedPassword = generateHashedPassword({ password });
+  const hashedPassword = generateHashedPassword({ password })
 
   const successCallback = () => {
     return res.status(201).json({
-      message: "User Creation Successful.",
-    });
-  };
+      message: 'User Creation Successful.'
+    })
+  }
 
   const failureCallback = (error) => {
-    next(error);
-  };
+    next(error)
+  }
 
   const user = new User({
     name,
@@ -25,52 +25,52 @@ const addUserController = (req, res, next) => {
     email,
     image: `${process.env.HOST}${file.path}`,
     password: hashedPassword,
-    password_alias: password,
-  });
+    posts: []
+  })
 
-  user.save().then(successCallback).catch(failureCallback);
-};
+  user.save().then(successCallback).catch(failureCallback)
+}
 
 const loginUserController = (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body
 
-  const hashedPassword = generateHashedPassword({ password });
+  const hashedPassword = generateHashedPassword({ password })
 
-  const failureCallback = (error) => next(error);
+  const failureCallback = (error) => next(error)
 
   const successCallback = (user) => {
     if (!user) {
-      throw new Error("User Not Found.");
+      throw new Error('User Not Found.')
     } else {
       const authToken = jwt.sign(
         { userId: user?._id },
         process.env.PASSWORD_SECRET,
-        { expiresIn: "1h" }
-      );
+        { expiresIn: '1h' }
+      )
 
       const generateExpiryInMilSeconds = ({ hours = 1 }) => {
-        const currentDate = new Date();
+        const currentDate = new Date()
 
-        currentDate.setHours(currentDate.getHours() + hours);
+        currentDate.setHours(currentDate.getHours() + hours)
 
-        return currentDate.getTime();
-      };
+        return currentDate.getTime()
+      }
 
       return res.status(200).json({
         userId: user?._id,
         authenticated: true,
         authToken,
-        expiry: generateExpiryInMilSeconds({ hours: 1 }),
-      });
+        expiry: generateExpiryInMilSeconds({ hours: 1 })
+      })
     }
-  };
+  }
 
   User.findOne({ email, password: hashedPassword })
     .then(successCallback)
-    .catch(failureCallback);
-};
+    .catch(failureCallback)
+}
 
 module.exports = {
   addUserController,
-  loginUserController,
-};
+  loginUserController
+}

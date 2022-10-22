@@ -21,16 +21,8 @@ const postSchema = new Schema(
       required: true
     },
     userId: {
-      type: {
-        username: {
-          type: String,
-          required: true
-        },
-        userImage: {
-          type: String,
-          required: true
-        }
-      },
+      type: Schema.Types.ObjectId,
+      ref: 'user',
       required: true
     }
   },

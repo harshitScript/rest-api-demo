@@ -1,34 +1,34 @@
-const express = require("express");
+const express = require('express')
 const {
   addUserController,
-  loginUserController,
-} = require("../controllers/user.controllers");
-const create_user_schema = require("../Validations/create-user-schema");
-const inputValidatorMiddleware = require("../middleware/inputValidatorMiddleware");
-const userMulter = require("../multer/multer.config.users");
-const uploadFileCheckMiddleware = require("../middleware/uploadFileCheckMiddleware");
-const { json } = require("body-parser");
-const login_user_schema = require("../Validations/login-user-schema");
+  loginUserController
+} = require('../controllers/user.controllers')
+const createUserSchema = require('../Validations/create-user-schema')
+const inputValidatorMiddleware = require('../middleware/inputValidatorMiddleware')
+const userMulter = require('../multer/multer.config.users')
+const uploadFileCheckMiddleware = require('../middleware/uploadFileCheckMiddleware')
+const { json } = require('body-parser')
+const loginUserSchema = require('../Validations/login-user-schema')
 
-const userRoutes = express.Router();
+const userRoutes = express.Router()
 
 //* POST /user/add-user
 userRoutes.post(
-  "/add-user",
-  userMulter.single("image"),
+  '/add-user',
+  userMulter.single('image'),
   uploadFileCheckMiddleware,
-  create_user_schema,
+  createUserSchema,
   inputValidatorMiddleware,
   addUserController
-);
+)
 
 //* POST /user/login-user
 userRoutes.post(
-  "/login-user",
+  '/login-user',
   json(),
-  login_user_schema,
+  loginUserSchema,
   inputValidatorMiddleware,
   loginUserController
-);
+)
 
-module.exports = userRoutes;
+module.exports = userRoutes

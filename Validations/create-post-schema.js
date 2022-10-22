@@ -1,6 +1,7 @@
 const { body } = require('express-validator')
+const User = require('../models/users')
 
-const create_post_schema = [
+const createPostSchema = [
   body('title')
     .trim()
     .isLength({ min: 10, max: 25 })
@@ -8,7 +9,14 @@ const create_post_schema = [
   body('description')
     .trim()
     .isLength({ min: 10 })
-    .withMessage('Description must have 10 characters')
+    .withMessage('Description must have 10 characters'),
+  body('userId').custom((value) => {
+    return User.findById(value).then((user) => {
+      if (!user) {
+        return Promise.reject('Unauthorized actions.')
+      }
+    })
+  })
 ]
 
-module.exports = create_post_schema
+module.exports = createPostSchema

@@ -45,4 +45,14 @@ userSchema.methods.addPost = function (postId) {
   return this.save()
 }
 
+userSchema.methods.deletePost = function (postId) {
+  const { posts } = this
+
+  const newPosts = posts?.filter((post) => post?.id !== postId)
+
+  this.posts = newPosts
+
+  return this.save()
+}
+
 module.exports = mongoose.model('user', userSchema)

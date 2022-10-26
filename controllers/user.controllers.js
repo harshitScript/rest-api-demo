@@ -2,43 +2,41 @@ const User = require('../models/users')
 const { generateHashedPassword } = require('../utils/helper')
 const jwt = require('jsonwebtoken')
 
-const addUserController = (req, res, next) => {
+const addUserController = async (req, res, next) => {
   const { name, username, email, password } = req.body
 
   const { file } = req
 
   const hashedPassword = generateHashedPassword({ password })
 
-  const successCallback = () => {
+  try {
+    const user = new User({
+      name,
+      username,
+      email,
+      image: `${process.env.HOST}${file.path}`,
+      password: hashedPassword,
+      posts: []
+    })
+
+    await user.save()
+
     return res.status(201).json({
       message: 'User Creation Successful.'
     })
-  }
-
-  const failureCallback = (error) => {
+  } catch (error) {
     next(error)
   }
-
-  const user = new User({
-    name,
-    username,
-    email,
-    image: `${process.env.HOST}${file.path}`,
-    password: hashedPassword,
-    posts: []
-  })
-
-  user.save().then(successCallback).catch(failureCallback)
 }
 
-const loginUserController = (req, res, next) => {
+const loginUserController = async (req, res, next) => {
   const { email, password } = req.body
 
   const hashedPassword = generateHashedPassword({ password })
 
-  const failureCallback = (error) => next(error)
+  try {
+    const user = await User.findOne({ email, password: hashedPassword })
 
-  const successCallback = (user) => {
     if (!user) {
       throw new Error('User Not Found.')
     } else {
@@ -63,11 +61,9 @@ const loginUserController = (req, res, next) => {
         expiry: generateExpiryInMilSeconds({ hours: 1 })
       })
     }
+  } catch (error) {
+    next(error)
   }
-
-  User.findOne({ email, password: hashedPassword })
-    .then(successCallback)
-    .catch(failureCallback)
 }
 
 module.exports = {

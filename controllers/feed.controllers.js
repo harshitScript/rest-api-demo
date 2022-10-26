@@ -4,68 +4,36 @@ const deleteFile = require('../utils/helper')
 const path = require('path')
 const rootDir = require('../utils/rootDir')
 
-const getPostsController = (req, res, next) => {
+const getPostsController = async (req, res, next) => {
   const { page } = req.params
 
-  const failureCallback = (error) => {
-    next(error)
-  }
+  try {
+    const posts = await Post.find()
+      .skip((page - 1) * 5)
+      .limit(5)
+      .populate('userId')
 
-  const successCallback = (posts) => {
     return res.json(posts)
-  }
-
-  Post.find()
-    .skip((page - 1) * 5)
-    .limit(5)
-    .populate('userId')
-    .then(successCallback)
-    .catch(failureCallback)
-}
-
-const getPostsPagesCountController = (req, res, next) => {
-  const failureCallback = (error) => {
+  } catch (error) {
     next(error)
   }
-
-  const successCallback = (numberOfDocuments) => {
-    return res.json({ count: Math.ceil(numberOfDocuments / 5) })
-  }
-
-  Post.find().countDocuments().then(successCallback).catch(failureCallback)
 }
 
-const postAddPostsController = (req, res, next) => {
+const getPostsPagesCountController = async (req, res, next) => {
+  try {
+    const numberOfDocuments = await Post.find().countDocuments()
+    return res.json({ count: Math.ceil(numberOfDocuments / 5) })
+  } catch (error) {
+    next(error)
+  }
+}
+
+const postAddPostsController = async (req, res, next) => {
   const { title, description, userId } = req.body
 
   const { file } = req
 
   let postId = ''
-
-  const findUser = (post) => {
-    postId = post?._id
-
-    return User.findById(userId)
-  }
-
-  const userPostMapping = (user) => {
-    return user.addPost(postId)
-  }
-
-  const failureCallback = (error) => {
-    next(error)
-  }
-
-  const successCallback = () => {
-    return res.status(201).json({
-      message: 'post created successfully',
-      content: {
-        title,
-        description,
-        image: `${process.env.HOST}${file.path}`
-      }
-    })
-  }
 
   // ? Some db operations
   const post = new Post({
@@ -76,96 +44,108 @@ const postAddPostsController = (req, res, next) => {
     userId
   })
 
-  post
-    .save()
-    .then(findUser)
-    .then(userPostMapping)
-    .then(successCallback)
-    .catch(failureCallback)
+  try {
+    await post.save()
 
-  User.findById(userId)
-}
+    postId = post?._id
 
-const getPostController = (req, res, next) => {
-  const { _id } = req.params
+    const user = await User.findById(userId)
 
-  const failureCallback = (error) => {
+    await user.addPost(postId)
+
+    return res.status(201).json({
+      message: 'post created successfully',
+      content: {
+        title,
+        description,
+        image: `${process.env.HOST}${file.path}`
+      }
+    })
+  } catch (error) {
     next(error)
   }
+}
 
-  const successCallback = (post) => {
+const getPostController = async (req, res, next) => {
+  const { _id } = req.params
+
+  try {
+    const post = await Post.findById(_id)
+
     if (post) {
       return res.json(post)
     }
     next(new Error('Post not Found.'))
+  } catch (error) {
+    next(error)
   }
-
-  Post.findById(_id).then(successCallback).catch(failureCallback)
 }
 
-const postEditPostController = (req, res, next) => {
+const postEditPostController = async (req, res, next) => {
   const { _id } = req.params
 
   const { title, description } = req.body
 
   const { file } = req
 
-  const failureCallback = (error) => {
-    next(error)
-  }
+  try {
+    const post = await Post.findById(_id)
 
-  const postUpdater = (post) => {
     if (post) {
-      deleteFile({ absUrl: path.join(rootDir, 'images', post.imageName) })
+      if (post?.userId === req?.userId) {
+        deleteFile({ absUrl: path.join(rootDir, 'images', post.imageName) })
 
-      return Post.findByIdAndUpdate(_id, {
-        title,
-        description,
-        image: `${process.env.HOST}${file.path}`,
-        imageName: file.originalname
-      })
+        await Post.findByIdAndUpdate(_id, {
+          title,
+          description,
+          image: `${process.env.HOST}${file.path}`,
+          imageName: file.originalname
+        })
+
+        return res.status(202).json({ message: 'Post Update Successful !' })
+      }
+
+      throw new Error('Unauthorized actions.')
     } else {
       const error = new Error('Post not found')
       error.customStatus = 404
       next(error)
     }
-  }
-
-  const successCallback = () => {
-    return res.status(202).json({ message: 'Post Update Successful !' })
-  }
-
-  Post.findById(_id)
-    .then(postUpdater)
-    .then(successCallback)
-    .catch(failureCallback)
-}
-
-const deletePostController = (req, res, next) => {
-  const { _id } = req.params
-
-  const failureCallback = (error) => {
+  } catch (error) {
     next(error)
   }
+}
 
-  const successCallback = () => {
-    return res.json({ message: `Post id:${_id} deleted successfully.` })
-  }
+const deletePostController = async (req, res, next) => {
+  const { _id } = req.params
 
-  const deletePost = (post) => {
+  let postId = ''
+
+  try {
+    const post = await Post.findById(_id)
+
     if (post) {
-      deleteFile({ absUrl: path.join(rootDir, 'images', post.imageName) })
+      if (post?.userId === req?.userId) {
+        postId = post?._id
 
-      return post.delete()
+        deleteFile({ absUrl: path.join(rootDir, 'images', post.imageName) })
+
+        await post.delete()
+
+        const user = await User.findById(req?.userId)
+
+        await user.deletePost(postId)
+
+        return res.json({ message: `Post id:${_id} deleted successfully.` })
+      }
+
+      throw new Error('Unauthorized actions.')
     } else {
       throw new Error('Post Not Found.')
     }
+  } catch (error) {
+    next(error)
   }
-
-  Post.findById(_id)
-    .then(deletePost)
-    .then(successCallback)
-    .catch(failureCallback)
 }
 
 module.exports = {

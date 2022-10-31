@@ -49,8 +49,12 @@ connectMongo()
     //* web-socket protocol [push data : server > client]
     const socket = connectSocket(httpServer);
 
-    socket.on("connection", (socket) => {
+    socket.on("connection", (client_socket) => {
       console.log("New client connection added.");
+
+      client_socket.on("disconnect", () => {
+        console.log("Client disconnected.");
+      });
     });
   })
   .catch((error) => {

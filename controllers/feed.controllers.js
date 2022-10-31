@@ -59,7 +59,7 @@ const postAddPostsController = async (req, res, next) => {
     //* All clients except the one who triggered the event.
     //socket.broadcast("post", { message: "a new post created" });
     //* All clients
-    socket.emit("post", { message: "a new post created" });
+    socket.emit("add-post", { message: "a new post created" });
 
     return res.status(201).json({
       message: "post created successfully",
@@ -143,6 +143,10 @@ const deletePostController = async (req, res, next) => {
         const user = await User.findById(req?.userId);
 
         await user.deletePost(postId);
+
+        const socket = getSocket();
+
+        socket.emit("delete-post", { message: "A post deleted" });
 
         return res.json({ message: `Post id:${_id} deleted successfully.` });
       }

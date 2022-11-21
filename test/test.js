@@ -1,7 +1,11 @@
 const { expect } = require("chai");
-const authChecker = require("../middleware/authChecker");
-
+const sinon = require("sinon");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
+
+const authChecker = require("../middleware/authChecker");
+const { loginUserController } = require("../controllers/user.controllers");
+const User = require("../models/users");
 
 describe("Server configuration suite.", () => {
   it("Server name must be rest-api-demo ", () => {
@@ -22,15 +26,75 @@ describe("Server configuration suite.", () => {
 });
 
 describe("Middleware testing suite", () => {
-  it("*authChecker.js* : The authorization header is present in request or not.", () => {
-    const req = {
-      headers: {
-        authorization: null,
-      },
-    };
+  describe("authChecker.js", () => {
+    it("should throw error when don't have authorization header in request", () => {
+      const req = {
+        headers: {
+          authorization: null,
+        },
+      };
 
-    expect(authChecker.bind(null, req, {}, () => {})).to.throw(
-      "Authorization header not found."
-    );
+      expect(authChecker.bind(null, req, {}, () => {})).to.throw(
+        "Authorization header not found."
+      );
+    });
+
+    it("should throw an error if malformed jwt is passed", () => {
+      const req = {
+        headers: {
+          authorization: "Bearer xyz",
+        },
+      };
+
+      expect(
+        authChecker.bind(null, req, {}, () => {
+          throw new Error("Malformed JWT");
+        })
+      ).to.throw("Malformed JWT");
+    });
+
+    it("should store the useId to the request object, in case of correct jwt.", () => {
+      const req = {
+        headers: {
+          authorization:
+            "Bearer khashkjcgfhjdsfjsfghasjhdfkjsadhksadjlksajdklajdla",
+        },
+      };
+
+      sinon.stub(jwt, "verify"); //* A substitute method is created
+
+      jwt.verify.returns({ userId: "yo yo" });
+
+      authChecker(req, {}, () => {});
+
+      jwt.verify.restore(); //* The substitute method is restored to original
+
+      expect(req).to.have.property("userId");
+    });
+  });
+});
+
+describe("Controllers testing suite.", () => {
+  describe("user.controllers.js", () => {
+    describe("loginUserController", () => {
+      it("should throw an error if database is down.", (done) => {
+        const req = {
+          body: {
+            email: "test@gmail.com",
+            password: "test",
+          },
+        };
+
+        sinon.stub(User, "findOne");
+
+        User.findOne.throws();
+
+        loginUserController(req, {}, () => {}).then((error) => {
+          expect(error).to.be.an("error");
+          User.findOne.restore();
+          done(); //* It tells mocha to wait for the async code to finish.
+        });
+      });
+    });
   });
 });

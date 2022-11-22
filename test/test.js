@@ -4,7 +4,10 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 const authChecker = require("../middleware/authChecker");
-const { loginUserController } = require("../controllers/user.controllers");
+const {
+  loginUserController,
+  userStatusController,
+} = require("../controllers/user.controllers");
 const User = require("../models/users");
 
 describe("Server configuration suite.", () => {
@@ -53,7 +56,7 @@ describe("Middleware testing suite", () => {
       ).to.throw("Malformed JWT");
     });
 
-    it("should store the useId to the request object, in case of correct jwt.", () => {
+    it("should store the userId to the request object, in case of correct jwt.", () => {
       const req = {
         headers: {
           authorization:
@@ -93,6 +96,18 @@ describe("Controllers testing suite.", () => {
           expect(error).to.be.an("error");
           User.findOne.restore();
           done(); //* It tells mocha to wait for the async code to finish.
+        });
+      });
+    });
+    describe("userStatusController", () => {
+      it("should throws an error if authorization header not found.", (done) => {
+        const req = {
+          headers: {},
+        };
+
+        userStatusController(req, {}, () => {}).then((res) => {
+          expect(res).to.be.an("error");
+          done();
         });
       });
     });

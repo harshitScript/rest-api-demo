@@ -68,7 +68,42 @@ const loginUserController = async (req, res, next) => {
   }
 };
 
+const userStatusController = async (req, res, next) => {
+  const { authorization } = req.headers;
+  try {
+    if (authorization) {
+      const authToken = authorization.split(" ")[1];
+
+      const decodedToken = jwt.verify(authToken, process.env.SECRET);
+
+      if (!decodedToken) {
+        throw new Error("Not a valid token.");
+      }
+
+      const { userId } = decodedToken;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        throw new Error("User not Found.");
+      }
+
+      res.json({
+        status: "Authorized",
+      });
+
+      return null;
+    } else {
+      throw new Error("Authorization Header not Found");
+    }
+  } catch (error) {
+    next(error);
+    return error;
+  }
+};
+
 module.exports = {
   addUserController,
   loginUserController,
+  userStatusController,
 };

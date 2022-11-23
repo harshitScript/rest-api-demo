@@ -60,3 +60,5 @@ connectMongo()
   .catch((error) => {
     console.log("Error occurred while connecting the database.");
   });
+
+app.listen(4000);

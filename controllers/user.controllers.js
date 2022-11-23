@@ -88,11 +88,9 @@ const userStatusController = async (req, res, next) => {
         throw new Error("User not Found.");
       }
 
-      res.json({
+      return res.json({
         status: "Authorized",
       });
-
-      return null;
     } else {
       throw new Error("Authorization Header not Found");
     }

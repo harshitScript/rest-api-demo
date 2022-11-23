@@ -110,6 +110,91 @@ describe("Controllers testing suite.", () => {
           done();
         });
       });
+      it("should throw an error is failed to verify jwt.", (done) => {
+        const req = {
+          headers: {
+            authorization: "Bearer xyz",
+          },
+        };
+        sinon.stub(jwt, "verify");
+        jwt.verify.throws();
+        userStatusController(req, {}, () => {}).then((res) => {
+          jwt.verify.restore();
+          expect(res).to.be.an("error");
+          done();
+        });
+      });
+      it("should throw an error if verified token is empty.", () => {
+        const req = {
+          headers: {
+            authorization: "Bearer xyz",
+          },
+        };
+        sinon.stub(jwt, "verify");
+        jwt.verify.returns(null);
+        userStatusController(req, {}, () => {}).then((res) => {
+          jwt.verify.restore();
+          expect(res).to.be.an("error");
+          done();
+        });
+      });
+      it("should throw an error if database fails to connect", (done) => {
+        const req = {
+          headers: {
+            authorization: "Bearer xyz",
+          },
+        };
+        sinon.stub(jwt, "verify");
+        jwt.verify.returns({ userId: "dummy_user_id" });
+        sinon.stub(User, "findById");
+        User.findById.throws();
+        userStatusController(req, {}, () => {}).then((res) => {
+          jwt.verify.restore();
+          User.findById.restore();
+          expect(res).to.be.an("error");
+          done();
+        });
+      });
+
+      it("should throw an error if user not exist.", (done) => {
+        const req = {
+          headers: {
+            authorization: "Bearer xyz",
+          },
+        };
+        sinon.stub(jwt, "verify");
+        jwt.verify.returns({ userId: "dummy_user_id" });
+        sinon.stub(User, "findById");
+        User.findById.returns(null);
+        userStatusController(req, {}, () => {}).then((res) => {
+          jwt.verify.restore();
+          User.findById.restore();
+          expect(res).to.be.an("error");
+          done();
+        });
+      });
+      it("should returns the response if user found.", (done) => {
+        const req = {
+          headers: {
+            authorization: "Bearer xyz",
+          },
+        };
+        const res = {
+          json() {
+            return {};
+          },
+        };
+        sinon.stub(jwt, "verify");
+        jwt.verify.returns({ userId: "dummy_user_id" });
+        sinon.stub(User, "findById");
+        User.findById.returns({ name: "test_user" });
+        userStatusController(req, res, () => {}).then((res) => {
+          jwt.verify.restore();
+          User.findById.restore();
+          expect(res).to.be.an("object");
+          done();
+        });
+      });
     });
   });
 });

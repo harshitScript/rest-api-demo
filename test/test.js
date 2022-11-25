@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const sinon = require("sinon");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 const authChecker = require("../middleware/authChecker");
@@ -195,6 +196,72 @@ describe("Controllers testing suite.", () => {
           done();
         });
       });
+    });
+  });
+});
+
+describe("Database Operations Check", () => {
+  describe("USER MODAL OPERATIONS", () => {
+    it("should add test user to the test database.", (done) => {
+      mongoose
+        .connect(
+          "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
+        )
+        .then(() => {
+          const user = new User({
+            name: "test user",
+            username: "testUser",
+            email: "test@gmail.com",
+            posts: [],
+            password: "some_long_dummy_string.",
+            image: "/test/test.png",
+          });
+
+          return user.save();
+        })
+        .then((user) => {
+          //* Cleaning up(Good practice)
+          return User.findByIdAndDelete(user._id);
+        })
+        .then(() => {
+          //* Cleaning up(Good practice)
+          return mongoose.disconnect();
+        })
+        .then(() => done())
+        .catch((error) => console.log("The error => ", error));
+    });
+
+    it("should fetch a user from the database", (done) => {
+      mongoose
+        .connect(
+          "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
+        )
+        .then(() => {
+          const user = new User({
+            name: "test user",
+            username: "testUser",
+            email: "test@gmail.com",
+            posts: [],
+            password: "some_long_dummy_string.",
+            image: "/test/test.png",
+          });
+
+          return user.save();
+        })
+        .then((user) => {
+          return User.findById(user._id);
+        })
+        .then((user) => {
+          if (user) {
+            //* Cleaning up
+            return User.findByIdAndDelete(user._id);
+          } else {
+            throw new Error("User not Found");
+          }
+        })
+        .then(() => mongoose.disconnect())
+        .then(() => done())
+        .catch((error) => console.log("The error => ", error));
     });
   });
 });

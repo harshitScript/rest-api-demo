@@ -10,6 +10,7 @@ const {
   userStatusController,
 } = require("../controllers/user.controllers");
 const User = require("../models/users");
+const Post = require("../models/posts");
 
 describe("Server configuration suite.", () => {
   it("Server name must be rest-api-demo ", () => {
@@ -201,53 +202,60 @@ describe("Controllers testing suite.", () => {
 });
 
 describe("Database Operations Check", () => {
+  //? Executes before all the test cases.
+  before((done) => {
+    //* SETUP OPERATIONS
+    mongoose
+      .connect(
+        "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
+      )
+      .then(() => done());
+  });
+
+  //? Executes after all the test cases.
+  after((done) => {
+    //* CLEANUP OPERATIONS
+    mongoose.disconnect().then(() => done());
+  });
+
+  //? Executes before each test case in the suite.
+  //beforeEach(()=>{})
+  //? Executes after each test case in the suite.
+  //afterEach(()=>{})
+
   describe("USER MODAL OPERATIONS", () => {
     it("should add test user to the test database.", (done) => {
-      mongoose
-        .connect(
-          "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
-        )
-        .then(() => {
-          const user = new User({
-            name: "test user",
-            username: "testUser",
-            email: "test@gmail.com",
-            posts: [],
-            password: "some_long_dummy_string.",
-            image: "/test/test.png",
-          });
+      const user = new User({
+        name: "test user",
+        username: "testUser",
+        email: "test@gmail.com",
+        posts: [],
+        password: "some_long_dummy_string.",
+        image: "/test/test.png",
+      });
 
-          return user.save();
-        })
+      user
+        .save()
         .then((user) => {
           //* Cleaning up(Good practice)
           return User.findByIdAndDelete(user._id);
-        })
-        .then(() => {
-          //* Cleaning up(Good practice)
-          return mongoose.disconnect();
         })
         .then(() => done())
         .catch((error) => console.log("The error => ", error));
     });
 
     it("should fetch a user from the database", (done) => {
-      mongoose
-        .connect(
-          "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
-        )
-        .then(() => {
-          const user = new User({
-            name: "test user",
-            username: "testUser",
-            email: "test@gmail.com",
-            posts: [],
-            password: "some_long_dummy_string.",
-            image: "/test/test.png",
-          });
+      const user = new User({
+        name: "test user",
+        username: "testUser",
+        email: "test@gmail.com",
+        posts: [],
+        password: "some_long_dummy_string.",
+        image: "/test/test.png",
+      });
 
-          return user.save();
-        })
+      user
+        .save()
         .then((user) => {
           return User.findById(user._id);
         })
@@ -259,9 +267,68 @@ describe("Database Operations Check", () => {
             throw new Error("User not Found");
           }
         })
-        .then(() => mongoose.disconnect())
         .then(() => done())
         .catch((error) => console.log("The error => ", error));
+    });
+  });
+
+  describe("POST MODAL OPERATIONS", () => {
+    let test_user_id;
+
+    before((done) => {
+      const user = new User({
+        name: "test user",
+        username: "testUser",
+        email: "test@gmail.com",
+        posts: [],
+        password: "some_long_dummy_string.",
+        image: "/test/test.png",
+      });
+
+      user.save().then((user) => {
+        if (user) {
+          test_user_id = user?._id;
+          done();
+        }
+      });
+    });
+
+    after((done) => {
+      User.findByIdAndDelete(test_user_id).then(() => done());
+    });
+
+    it("should add a post to the database", (done) => {
+      const post = new Post({
+        description: "A test post.",
+        image: "/test/test.png",
+        imageName: "test.png",
+        title: "test product",
+        userId: test_user_id,
+      });
+
+      post
+        .save()
+        .then((post) => Post.findByIdAndDelete(post?._id))
+        .then(() => done());
+    });
+
+    it("should edit the post in the database", (done) => {
+      const post = new Post({
+        description: "A test post.",
+        image: "/test/test.png",
+        imageName: "test.png",
+        title: "test product",
+        userId: test_user_id,
+      });
+
+      post
+        .save()
+        .then((post) => {
+          post.title = "New Test Product";
+          return post.save();
+        })
+        .then((post) => Post.findByIdAndDelete(post?._id))
+        .then(() => done());
     });
   });
 });

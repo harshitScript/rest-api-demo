@@ -121,6 +121,7 @@ const postEditPostController = async (req, res, next) => {
     }
   } catch (error) {
     next(error);
+    return error;
   }
 };
 

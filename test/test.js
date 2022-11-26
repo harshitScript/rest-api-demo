@@ -11,6 +11,7 @@ const {
 } = require("../controllers/user.controllers");
 const User = require("../models/users");
 const Post = require("../models/posts");
+const { postEditPostController } = require("../controllers/feed.controllers");
 
 describe("Server configuration suite.", () => {
   it("Server name must be rest-api-demo ", () => {
@@ -193,6 +194,116 @@ describe("Controllers testing suite.", () => {
         userStatusController(req, res, () => {}).then((res) => {
           jwt.verify.restore();
           User.findById.restore();
+          expect(res).to.be.an("object");
+          done();
+        });
+      });
+    });
+
+    describe("postEditPostController", () => {
+      let test_user_id;
+      let test_post_id;
+      before((done) => {
+        mongoose
+          .connect(
+            "mongodb+srv://harshitScript:hrsht-x007@cluster0.oph8h41.mongodb.net/rest-api-demo-test"
+          )
+          .then(() => {
+            const user = new User({
+              name: "test user",
+              username: "testUser",
+              email: "test@gmail.com",
+              posts: [],
+              password: "some_long_dummy_string.",
+              image: "/test/test.png",
+            });
+
+            return user.save();
+          })
+          .then((user) => {
+            test_user_id = user?._id;
+
+            const post = new Post({
+              description: "A test post.",
+              image: "/test/test.png",
+              imageName: "test.png",
+              title: "test product",
+              userId: test_user_id,
+            });
+
+            return post.save();
+          })
+          .then((post) => {
+            test_post_id = post?._id;
+            done();
+          })
+          .catch((error) => console.log(error));
+      });
+      after((done) => {
+        User.findByIdAndDelete(test_user_id)
+          .then(() => Post.findByIdAndDelete(test_post_id))
+          .then(() => mongoose.disconnect())
+          .then(() => done());
+      });
+      it("should throw an error if database refuses connection.", (done) => {
+        const req = {
+          params: {
+            _id: test_user_id,
+          },
+          body: {
+            title: "New Test Post",
+          },
+          file: {},
+        };
+
+        sinon.stub(Post, "findById");
+        Post.findById.throws();
+
+        postEditPostController(req, {}, () => {}).then((res) => {
+          expect(res).to.be.an("error");
+          Post.findById.restore();
+          done();
+        });
+      });
+      it("should throw unauthorized actions error if another user try to edit the post.", () => {
+        const req = {
+          params: {
+            _id: test_post_id,
+          },
+          body: {
+            title: "New Test Post",
+            description: "a dummy description.",
+          },
+          file: {},
+          userId: "wrong-user-id",
+        };
+        postEditPostController(req, {}, () => {}).then((res) => {
+          expect(res).to.be.an("error", "Unauthorized actions.");
+          done();
+        });
+      });
+
+      it("should successfully edit the post.", () => {
+        const req = {
+          params: {
+            _id: test_post_id,
+          },
+          body: {
+            title: "New Test Post",
+            description: "new dummy description.",
+          },
+          file: {},
+          userId: test_user_id,
+        };
+        const res = {
+          status() {
+            return this;
+          },
+          json() {
+            return {};
+          },
+        };
+        postEditPostController(req, res, () => {}).then((res) => {
           expect(res).to.be.an("object");
           done();
         });
